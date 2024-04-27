@@ -2,7 +2,7 @@
 Notes and stuff for cmes_mini wifi
 
 1. apt install network-manager
-1, touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
+1. touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
 1. nmcli dev set enp1s0 managed yes # This doesn't survive reboot
 1. nmcli dev set enp2s0 managed yes # This doesn't survive reboot
 1. systemctl restart NetworkManager
