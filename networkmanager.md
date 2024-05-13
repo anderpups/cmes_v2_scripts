@@ -1,5 +1,4 @@
-# cmes_mini_wifi
-Notes and stuff for cmes_mini wifi
+# cmes_mini_wifi for NetworkManager on Ubuntu Server
 
 1. apt install network-manager
 1. touch /etc/NetworkManager/conf.d/10-globally-managed-devices.conf
