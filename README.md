@@ -1,5 +1,9 @@
 # configure mini
 
+## TODO
+- Make Policykit permissions stricter for cmes
+- Prevent routing to other network devices when a hotspot
+
 ## Install ssh if needed
 ```bash
 sudo apt install ssh -y
@@ -69,7 +73,7 @@ sudo systemctl start ssh
 
    *Still working on this for now do the following*
 
-   Create a file at `/etc/NetworkManager/system-connections/cmes-hotspot.nmconnection` with the below info.
+   Create a file at `/etc/NetworkManager/system-connections/cmes-hotspot.nmconnection` with the below info. This assumes the user running the script is `cmes`.
 
    *Needs to have stricter permissions*
    
