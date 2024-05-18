@@ -69,14 +69,14 @@ sudo systemctl start ssh
 4. Install package to manage user permissions via PolicyKit. `sudo apt install polkitd-pkla -y`
 
 
-3. Grant the user permission to make wifi changes
+3. Grant the user permission to make Wi-Fi changes
 
    *Still working on this for now do the following*
 
    Create a file at `/etc/NetworkManager/system-connections/cmes-hotspot.nmconnection` with the below info. This assumes the user running the script is `cmes`.
 
    *Needs to have stricter permissions*
-   
+
    ```ini
    [Let cmes modify system settings for network]
    Identity=unix-user:cmes
@@ -86,6 +86,4 @@ sudo systemctl start ssh
    ResultActive=yes
    ```
 
-
-
-
+4. Run the script with required flags. You can run `wifi_switcher.sh -h` for help.
