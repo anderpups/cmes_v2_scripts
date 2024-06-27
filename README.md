@@ -1,8 +1,5 @@
 # configure mini
 
-## TODO
-- Prevent routing to other network devices when a hotspot
-
 ## Install ssh if needed
 ```bash
 sudo apt install ssh -y
