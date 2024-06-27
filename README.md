@@ -1,7 +1,6 @@
 # configure mini
 
 ## TODO
-- Make Policykit permissions stricter for cmes
 - Prevent routing to other network devices when a hotspot
 
 ## Install ssh if needed
@@ -36,7 +35,7 @@ sudo systemctl start ssh
     key-mgmt=wpa-psk
     psk=pionthefly
     pmf=1 # For Android devices
-    proto=wpa;
+    proto=wpa
     ```
 
 2. Set the owner and permissions
@@ -58,6 +57,17 @@ sudo systemctl start ssh
     cmes-hotspot    d2ab13be-53e1-3ab9-82c4-fd41fb10684e  wifi      wlo1   
     ```
 
+## Configure Firewall
+
+Run the following commands to configure firewall
+
+1. `sudo ufw allow in on wlo1` Allows access to hotspot clients
+2. `sudo ufw allow ssh` Allows ssh
+3. `sudo ufw allow proto tcp from 192.168.4.1/24 to 192.168.4.1 port 80` Allows hotspot clients access CMES site
+4. `sudo ufw deny proto any from 192.168.4.1/24 to 0.0.0.0/0` Deny all other access for hotspot clients
+5. `sudo ufw enable` # Enables the firewall in runtime
+6. `sudo systemctl enable ufw` # Enables firewall at boot
+
 ## Configure script
 
 1. Place `wifi_switcher.sh` script on the mini.
@@ -71,16 +81,12 @@ sudo systemctl start ssh
 
 3. Grant the user permission to make Wi-Fi changes
 
-   *Still working on this for now do the following*
-
-   Create a file at `/etc/NetworkManager/system-connections/cmes-hotspot.nmconnection` with the below info. This assumes the user running the script is `cmes`.
-
-   *Needs to have stricter permissions*
+   Create a file at `/etc/polkit-1/localauthority/50-local/10-cmes.network-permissions.pkla` with the below info. This assumes the user running the script is `cmes`.
 
    ```ini
    [Let cmes modify system settings for network]
    Identity=unix-user:cmes
-   Action=org.freedesktop.NetworkManager.*
+   Action=org.freedesktop.NetworkManager.settings.modify.system;org.freedesktop.NetworkManager.network-control;org.freedesktop.NetworkManager.wifi.share.protected;org.freedesktop.NetworkManager.enable-disable-wifi
    ResultAny=yes
    ResultInactive=yes
    ResultActive=yes

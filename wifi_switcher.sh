@@ -68,7 +68,9 @@ fi
 
 ## Set the wireless network
 if  [ -z "${DISCONNECT+set}" ]; then
-  nmcli con down "$HOTSPOT_PROFILE"
+  if $(nmcli -t -f active,name con | grep '^yes' | grep -q "$HOTSPOT_PROFILE"); then
+    nmcli con down "$HOTSPOT_PROFILE" || true
+  fi
   ## Pause for three seconds
   sleep 3
   ## Connect to wifi
@@ -78,15 +80,20 @@ fi
 
 ## Disconnect from wireless network
 if  [ "${DISCONNECT+set}" ]; then
-  ## get the active SSID
-  SSID=$({ iwgetid -r || true; })
-  ## Delete that connection
-  if [[ "$SSID" != "$HOTSPOT_PROFILE" && "$SSID" != '' ]]; then
-    nmcli con delete "$SSID"
+  ## Test whether $HOTSPOT_PROFILE is active
+  if $(nmcli -t -f active,name con | grep '^yes' | grep -q "$HOTSPOT_PROFILE"); then
+    echo "$HOTSPOT_PROFILE already active"
+    ## Bring up WIFI profile
+  else
+    ## Check if there is an active connection
+    if $(nmcli -t -f active dev wifi | grep -qE '^yes'); then
+      ## Get active connection
+      ACTIVE_SSID=$(nmcli -t -f active,ssid dev wifi | grep -E '^yes' | awk -F ':' '{print $2}')
+      ## Delete that connection
+      nmcli con delete "$ACTIVE_SSID" || true #Always complete so we can try to bring the profile back up
+    fi
     ## Bring up WIFI profile
     nmcli con up "$HOTSPOT_PROFILE"
-  else
-  echo "$HOTSPOT_PROFILE already active"
   fi
   exit 0
 fi
