@@ -77,7 +77,7 @@ if  [ -z "${DISCONNECT+set}" ]; then
   sleep 3
   ## Connect to wifi
   nmcli device wifi connect "$SSID" password "$PASSWORD"
-  $UPDATE_CONTENT_SCRIPT_LOCATION &>/dev/null & disown
+  # $UPDATE_CONTENT_SCRIPT_LOCATION &>/dev/null & disown
   exit 0
 fi
 
