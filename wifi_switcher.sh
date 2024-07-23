@@ -4,6 +4,8 @@ set -euo pipefail
 
 ## Declare the name of the hotspot connection profile
 HOTSPOT_PROFILE='cmes-hotspot'
+## Declare the location of the UpdateContent.sh script
+UPDATE_CONTENT_SCRIPT_LOCATION="$HOME/Cron/UpdateContent.sh"
 
 ## Get flags from script
 while getopts :hs:p:d flags; do
@@ -75,6 +77,7 @@ if  [ -z "${DISCONNECT+set}" ]; then
   sleep 3
   ## Connect to wifi
   nmcli device wifi connect "$SSID" password "$PASSWORD"
+  $UPDATE_CONTENT_SCRIPT_LOCATION &>/dev/null & disown
   exit 0
 fi
 
