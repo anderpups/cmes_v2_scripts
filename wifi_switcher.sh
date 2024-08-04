@@ -1,4 +1,6 @@
 #!/bin/bash
+#v20240804
+
 set -euo pipefail
 ## Script that will connect you to a wifi profile.
 
