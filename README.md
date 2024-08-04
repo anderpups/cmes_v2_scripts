@@ -7,9 +7,20 @@ sudo systemctl enable ssh
 sudo systemctl start ssh
 ```
 
+## Enable and Start resolved.service
+
+This wasn't needed for the mini, but on the Pi you will need to enable and start resolved.service
+
+```bash
+sudo systemctl start systemd-resolved.service
+sudo systemctl enable systemd-resolved.service
+```
+
 ## Configure hotspot
 
 1. Create a file at `/etc/NetworkManager/system-connections/cmes-hotspot.nmconnection` with the below info.
+
+    If you are configuring for the Pi you will need to replace `wlo1` with `wlan0`
 
     ```ini
     [connection]
@@ -58,7 +69,7 @@ sudo systemctl start ssh
 
 Run the following commands to configure firewall
 
-1. `sudo ufw allow in on wlo1` Allows access to hotspot clients
+1. `sudo ufw allow in on wlo1` Allows access from hotspot clients.  If you are configuring for the Pi you will need to replace `wlo1` with `wlan0`
 2. `sudo ufw allow ssh` Allows ssh
 3. `sudo ufw allow proto tcp from 192.168.4.1/24 to 192.168.4.1 port 80` Allows hotspot clients access CMES site
 4. `sudo ufw deny proto any from 192.168.4.1/24 to 0.0.0.0/0` Deny all other access for hotspot clients

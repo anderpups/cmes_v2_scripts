@@ -76,7 +76,7 @@ if  [ -z "${DISCONNECT+set}" ]; then
   ## Pause for three seconds
   sleep 3
   ## Connect to wifi
-  nmcli device wifi connect "$SSID" password "$PASSWORD"
+  nmcli device wifi connect "$SSID" password "$PASSWORD" || (echo "Connection to $SSID failed." &&  nmcli con up "$HOTSPOT_PROFILE")
   # $UPDATE_CONTENT_SCRIPT_LOCATION &>/dev/null & disown
   exit 0
 fi
