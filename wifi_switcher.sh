@@ -81,7 +81,8 @@ if  [ -z "${DISCONNECT+set}" ]; then
   sleep 3
   ## Connect to wifi, delete profile and switch back to hotspot profile if failed
   nmcli device wifi connect "$SSID" password "$PASSWORD" || \
-  (echo "Connection to $SSID failed."; nmcli con delete "$SSID"; nmcli con up "$HOTSPOT_PROFILE")
+    (echo "Connection to $SSID failed."; nmcli con delete "$SSID"; nmcli con up "$HOTSPOT_PROFILE"; \
+    echo "Hotspot is active" > "$STATUS_FILE_LOCATION"; exit 1)
   # $UPDATE_CONTENT_SCRIPT_LOCATION &>/dev/null & disown
   echo "Connected to $SSID network as a client" > "$STATUS_FILE_LOCATION"
   exit 0
