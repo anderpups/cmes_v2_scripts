@@ -1,11 +1,13 @@
 #!/bin/bash
-#v20240804
+#v20241007
 
 set -euo pipefail
 ## Script that will connect you to a wifi profile.
 
 ## Declare the name of the hotspot connection profile
 HOTSPOT_PROFILE='cmes-hotspot'
+## Declare the location of status file
+STATUS_FILE_LOCATION="$HOME/Cron/wifi_status.txt"
 ## Declare the location of the UpdateContent.sh script
 UPDATE_CONTENT_SCRIPT_LOCATION="$HOME/Cron/UpdateContent.sh"
 
@@ -77,9 +79,11 @@ if  [ -z "${DISCONNECT+set}" ]; then
   fi
   ## Pause for three seconds
   sleep 3
-  ## Connect to wifi
-  nmcli device wifi connect "$SSID" password "$PASSWORD" || (echo "Connection to $SSID failed." &&  nmcli con up "$HOTSPOT_PROFILE")
+  ## Connect to wifi, delete profile and switch back to hotspot profile if failed
+  nmcli device wifi connect "$SSID" password "$PASSWORD" || \
+  (echo "Connection to $SSID failed."; nmcli con delete "$SSID"; nmcli con up "$HOTSPOT_PROFILE")
   # $UPDATE_CONTENT_SCRIPT_LOCATION &>/dev/null & disown
+  echo "Connected to $SSID network as a client" > "$STATUS_FILE_LOCATION"
   exit 0
 fi
 
@@ -88,6 +92,7 @@ if  [ "${DISCONNECT+set}" ]; then
   ## Test whether $HOTSPOT_PROFILE is active
   if $(nmcli -t -f active,name con | grep '^yes' | grep -q "$HOTSPOT_PROFILE"); then
     echo "$HOTSPOT_PROFILE already active"
+    echo "Hotspot is active" > "$STATUS_FILE_LOCATION"
     ## Bring up WIFI profile
   else
     ## Check if there is an active connection
@@ -100,8 +105,10 @@ if  [ "${DISCONNECT+set}" ]; then
     ## Bring up WIFI profile
     nmcli con up "$HOTSPOT_PROFILE"
   fi
+  echo "Hotspot is active" > "$STATUS_FILE_LOCATION"
   exit 0
 fi
 
 echo "Something went wrong! Run with -d to enable default wireless profile"
+echo "Wifi settings are inconsistent, please toggle the wifi to reset" > "$STATUS_FILE_LOCATION"
 exit 1
