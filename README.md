@@ -77,7 +77,7 @@ Run the following commands to configure firewall
     `sudo ufw allow ssh` 
 1. Allow hotspot clients access CMES site
   
-    `sudo ufw allow proto tcp from 192.168.4.1/24 to 192.168.4.1 port 80`
+    `sudo ufw allow proto tcp from 192.168.4.0/24 to 192.168.4.1 port 80`
 1. Allow clients connecting from the ethernet connection
     - for mini: 
       - `sudo ufw allow in on enp1s0`
@@ -85,13 +85,10 @@ Run the following commands to configure firewall
     - for pi: `sudo ufw allow in eth0`
 1.  Deny access to internet for hotspot clients
 
-    `sudo ufw deny proto any from 192.168.4.1/24 to 0.0.0.0/0`
+    `sudo ufw deny proto any from 192.168.4.0/24 to 0.0.0.0/0`
 1. Enable the firewall in runtime
 
     `sudo ufw enable`
-1. Enable firewall at boot
-
-    `sudo systemctl enable ufw`
 
 ## Configure script
 
