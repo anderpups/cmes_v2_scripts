@@ -103,15 +103,17 @@ Run the following commands to configure firewall
 
 1. Grant the user permission to make Wi-Fi changes
 
-   Create a file at `/etc/polkit-1/localauthority/50-local/10-pi.network-permissions.pkla` with the below info. This assumes the user running the script is `pi`.
+   1. Create folder `sudo mkdir /etc/polkit-1/localauthority/50-local`.
 
-   ```ini
-   [Let pi user modify system settings for network]
-   Identity=unix-user:pi
-   Action=org.freedesktop.NetworkManager.settings.modify.system;org.freedesktop.NetworkManager.network-control;org.freedesktop.NetworkManager.wifi.share.protected;org.freedesktop.NetworkManager.enable-disable-wifi
-   ResultAny=yes
-   ResultInactive=yes
-   ResultActive=yes
-   ```
+   1. Create a file at `/etc/polkit-1/localauthority/50-local/10-pi.network-permissions.pkla` with the below info. This assumes the user running the script is `pi`.
+
+       ```ini
+       [Let pi user modify system settings for network]
+       Identity=unix-user:pi
+       Action=org.freedesktop.NetworkManager.settings.modify.system;org.freedesktop.NetworkManager.network-control;org.freedesktop.NetworkManager.wifi.share.protected;org.freedesktop.NetworkManager.enable-disable-wifi
+       ResultAny=yes
+       ResultInactive=yes
+       ResultActive=yes
+       ```
 
 4. Run the script with required flags. You can run `wifi_switcher.sh -h` for help.
