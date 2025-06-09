@@ -28,7 +28,7 @@ LOCAL_LOG_PATH='/var/lib/mysql-files'
 MYSQL_HOST='localhost'
 MYSQL_PORT='3306'
 
-LOGS=("UserLogin" "UserSearch" "UserUsage")
+LOGS=("UserLogin" "UserSearch" "UserUsage" "TopTopic")
 
 ## Loop through LOGS array
 for LOG in "${LOGS[@]}"; do
