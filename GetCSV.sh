@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Script to download and import CSV files into sql db
-## v20250603
+## v20250709
 
 set -eo pipefail
 
@@ -39,6 +39,7 @@ LOG_PATH='/var/www/html/CMES-Pi/assets/Log/'
 
 MYSQL_HOST='localhost'
 MYSQL_PORT='3306'
+MYSQL_DEFAULTS_FILE='/home/pi/.mysql_defaults'
 
 function getCSV {
   # Check if the csv file exists
@@ -73,22 +74,26 @@ function getCSV {
 
   # import new csv file
   echo "Attempting to import ${1}.csv"
-  if /usr/bin/mysqlimport --defaults-extra-file='/root/.mysql_defaults' \
+  if /usr/bin/mysqlimport --defaults-extra-file="$MYSQL_DEFAULTS_FILE" \
     -h "$MYSQL_HOST" -P "$MYSQL_PORT" --ignore CMES_mini --verbose --local --ignore-lines=1 --lines-terminated-by='\n' --fields-terminated-by=',' \
     -c "${2}" "${LOCAL_CSV_PATH}${1}.csv" >"${LOG_PATH}/csvTo${1}.log" 2>&1; then
     ## If import was successful
-    ## Delete old file
-    rm "${LOCAL_CSV_PATH}/${1}.csv.old"
+    if [ -f "${LOCAL_CSV_PATH}/${1}.csv.old" ]; then
+      ## Delete old file
+      rm "${LOCAL_CSV_PATH}/${1}.csv.old"
+    fi
     echo "Completed import of ${1}.csv"
   else
     ## If sql import fails
     ## Move failed csv file to .bad
-    mv "${LOCAL_CSV_PATH}/${1}.csv ${LOCAL_CSV_PATH}/${1}.csv.bad"
-    ## Reset the csv file to the old copy
-    mv "${LOCAL_CSV_PATH}/${1}.csv.old ${LOCAL_CSV_PATH}/${1}.csv"
+    mv "${LOCAL_CSV_PATH}/${1}.csv" "${LOCAL_CSV_PATH}/${1}.csv.bad"
     echo "Failed to import ${1}.csv"
     echo "The failed csv has been renamed ${1}.csv.bad"
-    echo "The original csv has been restored"
+    if [ -f "${LOCAL_CSV_PATH}/${1}.csv.old" ]; then
+      ## Reset the csv file to the old copy
+      mv "${LOCAL_CSV_PATH}/${1}.csv.old" "${LOCAL_CSV_PATH}/${1}.csv"
+      echo "The original csv has been restored"
+    fi
     echo "Look at ${LOG_PATH}csvTo${1}.log for more information"
     return 1
   fi

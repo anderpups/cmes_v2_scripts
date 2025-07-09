@@ -9,10 +9,10 @@ HOTSPOT_PROFILE='cmes-hotspot'
 ## Declare the location of status file
 STATUS_FILE_LOCATION="$HOME/Cron/wifi_status.txt"
 ## Declare the location of the UpdateContent.sh script
-UPDATE_CONTENT_SCRIPT_LOCATION="$HOME/Cron/UpdateContent.sh"
+UPDATE_CONTENT_SCRIPT_LOCATION="$HOME/Cron/UpdateContent-v2.sh"
 
 ## Get flags from script
-while getopts :hs:p:d flags; do
+while getopts :hs:p:d:x flags; do
   case $flags in
     s)
       SSID=$OPTARG >&2
@@ -23,8 +23,11 @@ while getopts :hs:p:d flags; do
     d)
       DISCONNECT=true >&2
       ;;
+    x)
+      UPDATE_CONTENT=false >&2
+      ;;
     h)
-      echo "usage: wifi_switcher.sh [-h] [-s 'SSID'] [-p 'PASSWORD'] [-d] [-h]" >&2
+      echo "usage: wifi_switcher.sh [-h] [-s 'SSID'] [-p 'PASSWORD'] [-d] [-x] [-h]" >&2
       echo ""  >&2
       echo "Connects and disconnects from a wireless network." >&2
       echo "Both the SSID and password need to be wrapped in single quotes." >&2
@@ -36,6 +39,8 @@ while getopts :hs:p:d flags; do
       echo "     password for wireless network" >&2
       echo "  -d"  >&2
       echo "     disconnect from wireless netwok" >&2
+      echo "  -x"  >&2
+      echo "     disables content updates" >&2
       echo "  -h" >&2
       echo "     display help message" >&2
       echo "" >&2
@@ -83,7 +88,10 @@ if  [ -z "${DISCONNECT+set}" ]; then
   nmcli device wifi connect "$SSID" password "$PASSWORD" || \
     (echo "Connection to $SSID failed."; nmcli con delete "$SSID"; nmcli con up "$HOTSPOT_PROFILE"; \
     echo "Hotspot is active" > "$STATUS_FILE_LOCATION"; exit 1)
-  # $UPDATE_CONTENT_SCRIPT_LOCATION &>/dev/null & disown
+  if [ "$UPDATE_CONTENT_SCRIPT_LOCATION" = true ]; then
+    $UPDATE_CONTENT_SCRIPT_LOCATION &>/dev/null & disown
+    
+  fi
   echo "Connected to $SSID network as a client" > "$STATUS_FILE_LOCATION"
   exit 0
 fi
