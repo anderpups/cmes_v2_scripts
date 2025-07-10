@@ -6,14 +6,16 @@ set -euo pipefail
 
 ## Declare the name of the hotspot connection profile
 HOTSPOT_PROFILE='cmes-hotspot'
+
 ## Declare the location of status file
-STATUS_FILE_LOCATION="$HOME/Cron/wifi_status.txt"
+STATUS_FILE_LOCATION="/home/pi/Cron/wifi_status.txt"
+
 ## Declare the location of the UpdateContent.sh script
-UPDATE_CONTENT_SCRIPT_LOCATION="$HOME/Cron/UpdateContent-v2.sh"
+UPDATE_CONTENT_SCRIPT_LOCATION='/home/pi/Cron/UpdateContent-v2.sh'
 UPDATE_CONTENT=true
 
 ## Get flags from script
-while getopts :hdxs:p: flags; do
+while getopts :dhs:p:x flags; do
   case $flags in
     s)
       SSID=$OPTARG >&2
@@ -61,7 +63,6 @@ while getopts :hdxs:p: flags; do
       ;;
   esac
 done
-
 ## Check to make sure the correct flags are passed
 if  [ -z "${DISCONNECT+set}" ]; then
   if [[ -z "${SSID+set}" || -z "${PASSWORD+set}" || $OPTIND -eq 1 ]]; then

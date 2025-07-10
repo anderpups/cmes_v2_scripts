@@ -1,4 +1,3 @@
-- test wifi_switcher with wifi. Try bluetooth wifi adaptor in vm. Make sure UpdateContent-v2.sh kicks off. Check -x option
-- UpdateContent-v2.sh needs to call GetCSV.sh. -x shoudl not call GetCSV.sh
-- wifi_switcher should also trigger SendLogs.sh
+# TODO
+
 - get rsync script to delete local copy of content if not present on remote.
