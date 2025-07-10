@@ -1,5 +1,5 @@
 #!/bin/bash
-#v20241007
+#v20250710
 
 set -euo pipefail
 ## Script that will connect you to a wifi profile.
@@ -10,9 +10,10 @@ HOTSPOT_PROFILE='cmes-hotspot'
 STATUS_FILE_LOCATION="$HOME/Cron/wifi_status.txt"
 ## Declare the location of the UpdateContent.sh script
 UPDATE_CONTENT_SCRIPT_LOCATION="$HOME/Cron/UpdateContent-v2.sh"
+UPDATE_CONTENT=true
 
 ## Get flags from script
-while getopts :hs:p:d:x flags; do
+while getopts :hdxs:p: flags; do
   case $flags in
     s)
       SSID=$OPTARG >&2
@@ -27,7 +28,7 @@ while getopts :hs:p:d:x flags; do
       UPDATE_CONTENT=false >&2
       ;;
     h)
-      echo "usage: wifi_switcher.sh [-h] [-s 'SSID'] [-p 'PASSWORD'] [-d] [-x] [-h]" >&2
+      echo "usage: wifi_switcher.sh [-h] [-s 'SSID'] [-p 'PASSWORD'] [-d] [-h] [-x]" >&2
       echo ""  >&2
       echo "Connects and disconnects from a wireless network." >&2
       echo "Both the SSID and password need to be wrapped in single quotes." >&2
@@ -38,9 +39,9 @@ while getopts :hs:p:d:x flags; do
       echo "  -p 'PASSWORD'" >&2
       echo "     password for wireless network" >&2
       echo "  -d"  >&2
-      echo "     disconnect from wireless netwok" >&2
+      echo "     disconnect from wireless network" >&2
       echo "  -x"  >&2
-      echo "     disables content updates" >&2
+      echo "     disables updating content" >&2
       echo "  -h" >&2
       echo "     display help message" >&2
       echo "" >&2
@@ -84,14 +85,21 @@ if  [ -z "${DISCONNECT+set}" ]; then
   fi
   ## Pause for three seconds
   sleep 3
-  ## Connect to wifi, delete profile and switch back to hotspot profile if failed
-  nmcli device wifi connect "$SSID" password "$PASSWORD" || \
-    (echo "Connection to $SSID failed."; nmcli con delete "$SSID"; nmcli con up "$HOTSPOT_PROFILE"; \
-    echo "Hotspot is active" > "$STATUS_FILE_LOCATION"; exit 1)
-  if [ "$UPDATE_CONTENT_SCRIPT_LOCATION" = true ]; then
-    $UPDATE_CONTENT_SCRIPT_LOCATION &>/dev/null & disown
-    
+  ## Check if already connected.
+  if $(nmcli -t -f active,name con | grep '^yes' | grep -q "$SSID"); then
+    echo "Already connected to $SSID network as a client!"
+  else
+    ## Connect to wifi, delete profile and switch back to hotspot profile if failed
+    nmcli device wifi connect "$SSID" password "$PASSWORD" || \
+      (echo "Connection to $SSID failed."; nmcli con delete "$SSID"; nmcli con up "$HOTSPOT_PROFILE"; \
+      echo "Hotspot is active" > "$STATUS_FILE_LOCATION"; exit 1)
   fi
+  ## Trigger Update_Content Script unless -x flag is set
+  if [ "$UPDATE_CONTENT" = true ]; then
+    echo 'Updating content'
+    "$UPDATE_CONTENT_SCRIPT_LOCATION" "-m" "-u" "-s" &>/dev/null & disown
+  fi
+
   echo "Connected to $SSID network as a client" > "$STATUS_FILE_LOCATION"
   exit 0
 fi

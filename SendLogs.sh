@@ -27,6 +27,7 @@ LOCAL_LOG_PATH='/var/lib/mysql-files'
 
 MYSQL_HOST='localhost'
 MYSQL_PORT='3306'
+MYSQL_DEFAULTS_FILE='/home/pi/.mysql_defaults'
 
 LOGS=("UserLogin" "UserSearch" "UserUsage" "TopTopic")
 
@@ -37,7 +38,7 @@ for LOG in "${LOGS[@]}"; do
     rm "/var/lib/mysql-files/${LOG}.csv"
   fi
   ## Export log file to 
-  /usr/bin/mysql --defaults-extra-file='/root/.mysql_defaults' \
+  /usr/bin/mysql --defaults-extra-file="$MYSQL_DEFAULTS_FILE" \
   --host "localhost" --port "3306" --database CMES_mini \
   --execute "SELECT * FROM $LOG INTO OUTFILE '${LOCAL_LOG_PATH}/${LOG}.csv' FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n';"
   ## scp and rename file with hostname appended to name

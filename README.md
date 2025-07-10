@@ -86,11 +86,21 @@ Run the following commands to configure firewall
 1.  Deny access to internet for hotspot clients
 
     `sudo ufw deny proto any from 192.168.4.0/24 to 0.0.0.0/0`
-1. Enable the firewall in runtimeinfo
+1. Enable the firewall in runtime
 
     `sudo ufw enable`
 
-## Configure wifi script
+## Configure mysql prerequisites
+
+1. Set at facl for the `pi` user access files created by mysql. `sudo setfacl -m 'u:pi:rwx' /var/lib/mysql-files/`
+1. Create mysql defaults file `/home/pi/.mysql_defaults` with the below content. Update with the root password for mysql.
+    ```ini
+    [client] 
+    user= root 
+    password=[password]
+    ```
+
+## Configure wifi_switcher script
 
 1. Place `wifi_switcher.sh` script on the mini.
 1. Set the owner and permissions
@@ -105,7 +115,7 @@ Run the following commands to configure firewall
 
    1. Create folder `sudo mkdir /etc/polkit-1/localauthority/50-local`.
 
-   1. Create a file at `/etc/polkit-1/localauthority/50-local/10-pi.network-permissions.pkla` with the below content. This assumes the user running the script is `pi`.
+   1. Create a file at `/etc/polkit-1/localauthority/50-local/10-pi.network-permissions.pkla` with the below info. This assumes the user running the script is `pi`.
 
        ```ini
        [Let pi user modify system settings for network]
@@ -117,20 +127,3 @@ Run the following commands to configure firewall
        ```
 
 4. Run the script with required flags. You can run `wifi_switcher.sh -h` for help.
-
-## Configure the GetCSV.sh script
-1. Place `GetCSV.sh` script on the mini.
-1. Set the owner and permissions
-    ```bash
-    sudo chown root:root GetCSV.sh
-    sudo chmod 755 GetCSV.sh
-    ```
-1. Create mysql client credentials file at `/home/pi/.mysql_defautls` with the below content. Replace the password with the root mysql password.
-
-    ```ini
-    [client] 
-    user= root 
-    password=[root password]
-    ```
-
-  

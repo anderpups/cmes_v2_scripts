@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Script to download and import CSV files into sql db
-## v20250709
+## v20250710
 
 set -eo pipefail
 
@@ -42,24 +42,25 @@ MYSQL_PORT='3306'
 MYSQL_DEFAULTS_FILE='/home/pi/.mysql_defaults'
 
 function getCSV {
-  # Check if the csv file exists
+  ## Check if the csv file exists
   if [ -f "${LOCAL_CSV_PATH}/${1}.csv" ]; then
     echo "Copying ${1}.csv to ${1}.csv.old"
-    # Copy existing to .old
+    ## Copy existing to .old
     /usr/bin/cp -f ${LOCAL_CSV_PATH}/${1}.csv ${LOCAL_CSV_PATH}/${1}.csv.old
   fi
 
-  # Check and grab the latest csv file from the remote scp host
+  ## Check and grab the latest csv file from the remote scp host
   echo "Attempting to download ${1}.csv"
   if /usr/bin/rsync --log-file "${LOG_PATH}/csvTo${1}.log" -e "ssh -i $SSH_PRIVATE_KEY_PATH" \
     -t "${REMOTE_SCP_USER}@${REMOTE_SCP_HOST}:${REMOTE_CSV_PATH}/${1}.csv" "${LOCAL_CSV_PATH}/${1}.csv"; then
     echo "Downloaded ${1}.csv"
   else
+    ## Fail if the rsync commnad fails
     echo "Failed to download ${1}.csv"
     echo "Look at ${LOG_PATH}csvTo${1}.log for more information"
     return 1
   fi
-  # If the force flag is not set
+  # If the force flag is not set, check if there is a diff
   if [ -z "$FORCE" ]; then
     # Check if the .old file exists
     if [ -f "${LOCAL_CSV_PATH}/${1}.csv.old" ]; then
@@ -97,7 +98,6 @@ function getCSV {
     echo "Look at ${LOG_PATH}csvTo${1}.log for more information"
     return 1
   fi
-
 }
 
 # Call the function with arguments fo each of the files and their columns used for sql import
