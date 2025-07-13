@@ -90,7 +90,17 @@ Run the following commands to configure firewall
 
     `sudo ufw enable`
 
-## Configure script
+## Configure mysql prerequisites
+
+1. Set at facl for the `pi` user access files created by mysql. `sudo setfacl -m 'u:pi:rwx' /var/lib/mysql-files/`
+1. Create mysql defaults file `/home/pi/.mysql_defaults` with the below content. Update with the root password for mysql.
+    ```ini
+    [client] 
+    user= root 
+    password=[password]
+    ```
+
+## Configure wifi_switcher script
 
 1. Place `wifi_switcher.sh` script on the mini.
 1. Set the owner and permissions
