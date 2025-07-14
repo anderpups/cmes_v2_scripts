@@ -99,6 +99,7 @@ Run the following commands to configure firewall
     user= root 
     password=[password]
     ```
+1. set `chown pi:www-data .mysql_defaults`
 
 ## Configure wifi_switcher script
 
