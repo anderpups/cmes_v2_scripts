@@ -92,14 +92,13 @@ Run the following commands to configure firewall
 
 ## Configure mysql prerequisites
 
-1. Set at facl for the `pi` user access files created by mysql. `sudo setfacl -m 'u:pi:rwx' /var/lib/mysql-files/`
-1. Create mysql defaults file `/home/pi/.mysql_defaults` with the below content. Update with the root password for mysql.
+1. Create mysql defaults file `/root/.mysql_defaults` with the below content. Update with the root password for mysql.
     ```ini
     [client] 
     user= root 
     password=[password]
     ```
-1. set `chown pi:www-data .mysql_defaults`
+1. set `sudo chown root:root .mysql_defaults`
 
 ## Configure wifi_switcher script
 
@@ -109,22 +108,4 @@ Run the following commands to configure firewall
     sudo chown root:root wifi_switcher.sh
     sudo chmod 755 wifi_switcher.sh
     ```
-1. Install package to manage user permissions via PolicyKit. `sudo apt install polkitd-pkla -y`
-
-
-1. Grant the user permission to make Wi-Fi changes
-
-   1. Create folder `sudo mkdir /etc/polkit-1/localauthority/50-local`.
-
-   1. Create a file at `/etc/polkit-1/localauthority/50-local/10-pi.network-permissions.pkla` with the below info. This assumes the user running the script is `pi`.
-
-       ```ini
-       [Let pi user modify system settings for network]
-       Identity=unix-user:pi
-       Action=org.freedesktop.NetworkManager.settings.modify.system;org.freedesktop.NetworkManager.network-control;org.freedesktop.NetworkManager.wifi.share.protected;org.freedesktop.NetworkManager.enable-disable-wifi
-       ResultAny=yes
-       ResultInactive=yes
-       ResultActive=yes
-       ```
-
 4. Run the script with required flags. You can run `wifi_switcher.sh -h` for help.
