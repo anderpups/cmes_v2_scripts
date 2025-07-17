@@ -1,9 +1,11 @@
 #!/bin/bash
-# v20250711
-
-set -euo pipefail
-
 # This script connects to a specified Wi-Fi profile or disconnects to activate a hotspot.
+# v20250717
+
+# Exit immediately if a command exits with a non-zero status.
+# Treat unset variables as an error when substituting.
+# The return value of a pipeline is the status of the last command to exit with a non-zero status.
+set -euo pipefail
 
 # --- Configuration ---
 
@@ -11,10 +13,10 @@ set -euo pipefail
 readonly HOTSPOT_PROFILE='cmes-hotspot'
 
 # Location for the Wi-Fi status file
-readonly STATUS_FILE_LOCATION="/home/pi/Cron/wifi_status.txt"
+readonly STATUS_FILE_LOCATION="/var/www/html/CMES-Pi/wifi_status.txt"
 
 # Location of the content update script
-readonly UPDATE_CONTENT_SCRIPT_LOCATION='/home/pi/Cron/UpdateContent-v2.sh'
+readonly UPDATE_CONTENT_SCRIPT_LOCATION='/var/www/html/CMES-Pi/assets/Cron/UpdateContent-v2.sh'
 
 # Default to updating content
 UPDATE_CONTENT=true
@@ -162,11 +164,9 @@ if ! $DISCONNECT; then
   # Trigger Update_Content Script if enabled
   if "$UPDATE_CONTENT"; then
     echo "Updating content..."
-    # Using `nohup` for robustness, though `& disown` is also an option.
     # Redirect stdout/stderr to /dev/null to prevent zombie processes.
-    nohup "$UPDATE_CONTENT_SCRIPT_LOCATION" -m -u -s &>/dev/null &
+    nohup "$UPDATE_CONTENT_SCRIPT_LOCATION" -m -u &>/dev/null &
     # If the parent script exits before `nohup`, the child process will still run.
-    # `disown` is for processes launched with `&` without `nohup`.
   fi
 
   echo "Connected to '$SSID' network as a client." > "$STATUS_FILE_LOCATION"

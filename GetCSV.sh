@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Script to download and import CSV files into sql db
-## v20250713
+## v20250717
 
 # Exit immediately if a command exits with a non-zero status.
 # Treat unset variables as an error when substituting.
@@ -9,8 +9,8 @@ set -euo pipefail
 
 # --- Configuration Variables ---
 readonly REMOTE_SCP_USER='cmesworldpi'
-readonly REMOTE_SCP_HOST='40.71.203.3'
-readonly REMOTE_CSV_PATH='/home/cmesworldpi/elif/CMES-mini/assets/csv/'
+readonly REMOTE_SCP_HOST='bridgevm.techieswithoutborders.us'
+readonly REMOTE_CSV_PATH='/home/cmesworldpi/elif/CMES-v2/assets/csv/'
 readonly SSH_PRIVATE_KEY_PATH='/home/pi/.ssh/id_rsa'
 
 readonly LOCAL_BASE_PATH='/var/www/html/CMES-Pi/assets'
@@ -19,7 +19,7 @@ readonly LOG_PATH="${LOCAL_BASE_PATH}/Log"
 
 readonly MYSQL_HOST='localhost'
 readonly MYSQL_PORT='3306'
-readonly MYSQL_DEFAULTS_FILE='/home/pi/.mysql_defaults'
+readonly MYSQL_DEFAULTS_FILE='/root/.mysql_defaults'
 
 FORCE_IMPORT=false # Initialize as false
 

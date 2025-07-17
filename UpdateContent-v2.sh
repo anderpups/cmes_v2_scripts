@@ -1,29 +1,27 @@
 #!/bin/bash
-# 20250711
+## Script to Update CMES Content via rsync
+# 20250717
 
 # --- Configuration ---
-# Define variables for remote and local paths, and script locations.
-# Using descriptive names and making them easily modifiable at the top.
 
 readonly REMOTE_SCP_USER='cmesworldpi'
-readonly REMOTE_SCP_HOST='40.71.203.3'
+readonly REMOTE_SCP_HOST='bridgevm.techieswithoutborders.us'
 # Use an array for REMOTE_CONTENT_PATHS to handle multiple paths more cleanly
 readonly REMOTE_CONTENT_PATHS=(
   '/home/cmesworldpi/elif/CMES-Pi/assets/Content/'
-  '/home/cmesworldpi/elif/CMES-Pi/assets/VideoContent/'
+  '/home/cmesworldpi/elif/CMES-v2/assets/VideoContent/'
 )
 readonly SSH_PRIVATE_KEY_PATH='/home/pi/.ssh/id_rsa'
 
 readonly LOCAL_CONTENT_PATH='/var/www/html/CMES-Pi/assets/Content/'
-readonly LOG_DIR='/home/pi/Cron'
-readonly LOG_FILE="${LOG_DIR}/UpdateContent_status.txt"
+readonly LOG_DIR='/var/www/html/CMES-Pi'
+readonly LOG_FILE="${LOG_DIR}/wifi_status.txt"
 
-readonly UPDATE_METADATA_SCRIPT_LOCATION='/home/pi/Cron/GetCSV.sh'
-readonly SENDLOGS_SCRIPT_LOCATION='/home/pi/Cron/SendLogs.sh'
-readonly WIFI_SWITCHER_SCRIPT_LOCATION='/home/pi/Cron/wifi_switcher.sh'
+readonly UPDATE_METADATA_SCRIPT_LOCATION='/var/www/html/CMES-Pi/assets/Cron/GetCSV.sh'
+readonly SENDLOGS_SCRIPT_LOCATION='/var/www/html/CMES-Pi/assets/Cron/SendLogs.sh'
+readonly WIFI_SWITCHER_SCRIPT_LOCATION='/var/www/html/CMES-Pi/wifi_switcher.sh'
 
 # --- Functions ---
-# Encapsulate repetitive or complex logic into functions for better organization.
 
 # Function to display help message
 show_help() {

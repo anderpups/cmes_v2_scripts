@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Script to export logs from SQL and upload via rsync
-## v20250711
+## v20250717
 
 # Exit immediately if a command exits with a non-zero status.
 # Treat unset variables as an error when substituting.
@@ -9,13 +9,13 @@ set -eo pipefail
 
 # --- Configuration Variables ---
 readonly REMOTE_SCP_USER='cmesworldpi'
-readonly REMOTE_SCP_HOST='40.71.203.3'
-readonly REMOTE_LOG_PATH='/home/cmesworldpi/elif/CMES-mini-CodeBase/Usagelogs/'
+readonly REMOTE_SCP_HOST='bridgevm.techieswithoutborders.us'
+readonly REMOTE_LOG_PATH='/home/cmesworldpi/elif/CMES-v2-CodeBase/Usagelogs/'
 readonly SSH_PRIVATE_KEY_PATH='/home/pi/.ssh/id_rsa'
 readonly LOCAL_LOG_DIR='/var/lib/mysql-files'
 readonly MYSQL_HOST='localhost'
 readonly MYSQL_PORT='3306'
-readonly MYSQL_DEFAULTS_FILE='/home/pi/.mysql_defaults'
+readonly MYSQL_DEFAULTS_FILE='/root/.mysql_defaults'
 readonly MYSQL_DATABASE='CMES_mini'
 
 # Array of log tables to export
