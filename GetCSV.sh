@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Script to download and import CSV files into sql db
-## v20250717
+## v20250721
 
 # Exit immediately if a command exits with a non-zero status.
 # Treat unset variables as an error when substituting.
@@ -43,7 +43,7 @@ log_message() {
   local message="$2"
   local timestamp
   timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-  echo "${timestamp} [${level}] ${message}" | tee -a "${LOG_PATH}/script_activity.log"
+  echo "${timestamp} [${level}] ${message}" | tee -a "${LOG_PATH}/GetCSV-script_activity.log"
 }
 
 # Function to check if a command exists
@@ -175,7 +175,7 @@ getCSV() {
   log_message "INFO" "Attempting to import ${csv_filename}.csv into MySQL."
   if mysqlimport --defaults-extra-file="$MYSQL_DEFAULTS_FILE" \
     -h "$MYSQL_HOST" -P "$MYSQL_PORT" --ignore CMES_mini --verbose \
-    --local --ignore-lines=1 --lines-terminated-by='\n' --fields-terminated-by=',' \
+    --local --ignore-lines=1 --delete --lines-terminated-by='\n' --fields-terminated-by=',' \
     -c "$mysql_columns" "${local_csv_file}" >"$mysql_import_log" 2>&1; then
     log_message "INFO" "Successfully imported ${csv_filename}.csv."
     rm -f "$old_csv_file" # Clean up old file if import was successful
