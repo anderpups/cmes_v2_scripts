@@ -8,7 +8,7 @@ readonly REMOTE_SCP_USER='cmesworldpi'
 readonly REMOTE_SCP_HOST='bridgevm.techieswithoutborders.us'
 # Use an array for REMOTE_CONTENT_PATHS to handle multiple paths more cleanly
 readonly REMOTE_CONTENT_PATHS=(
-  '/home/cmesworldpi/elif/CMES-Pi/assets/Content/'
+  '/home/cmesworldpi/elif/CMES-v2/assets/Content/'
   '/home/cmesworldpi/elif/CMES-v2/assets/VideoContent/'
 )
 readonly SSH_PRIVATE_KEY_PATH='/home/pi/.ssh/id_rsa'
