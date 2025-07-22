@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script connects to a specified Wi-Fi profile or disconnects to activate a hotspot.
-# v20250717
+# v20250722
 
 # Exit immediately if a command exits with a non-zero status.
 # Treat unset variables as an error when substituting.
@@ -21,6 +21,8 @@ readonly UPDATE_CONTENT_SCRIPT_LOCATION='/var/www/html/CMES-Pi/assets/Cron/Updat
 # Default to updating content
 UPDATE_CONTENT=true
 
+readonly LOG_PATH='/var/www/html/CMES-Pi/assets/Log'
+
 # --- Helper Functions ---
 
 # Displays an error message and exits.
@@ -28,7 +30,7 @@ UPDATE_CONTENT=true
 #   $1: The error message.
 #   $2: The exit code (optional, defaults to 1).
 error_exit() {
-  echo "Error: $1" >&2
+  log_message "ERROR" "Error: $1"
   exit "${2:-1}"
 }
 
@@ -55,6 +57,15 @@ show_help() {
   echo "  $(basename "$0") -s 'my-wifi-network' -p 'mysecretpassword'"
   echo "  $(basename "$0") -d"
   exit 0
+}
+
+# Function to log messages
+log_message() {
+  local level="$1"
+  local message="$2"
+  local timestamp
+  timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  echo "${timestamp} [${level}] ${message}" | tee -a "${LOG_PATH}/wifi_switcher-script_activity.log"
 }
 
 # Checks if a NetworkManager connection profile is active.
@@ -129,26 +140,28 @@ fi
 if ! $DISCONNECT; then
   # Connect to a specified Wi-Fi network
 
-  echo "Attempting to connect to Wi-Fi network: '$SSID'"
+  log_message "INFO" "Attempting to connect to Wi-Fi network: '$SSID'"
 
   # If hotspot is active, bring it down first
   if is_profile_active "$HOTSPOT_PROFILE"; then
-    echo "Hotspot profile '$HOTSPOT_PROFILE' is active. Bringing it down..."
+    log_message "INFO" "Hotspot profile '$HOTSPOT_PROFILE' is active. Bringing it down..."
+    # Attempt to bring down the hotspot profile
+    # If it fails, log a warning but continue
     if ! nmcli con down "$HOTSPOT_PROFILE"; then
-      echo "Warning: Failed to bring down hotspot profile '$HOTSPOT_PROFILE'. Continuing anyway." >&2
+      log_message "WARNING" "Failed to bring down hotspot profile '$HOTSPOT_PROFILE'. Continuing anyway."
     fi
     sleep 3 # Give NetworkManager a moment
   fi
 
   # Check if already connected to the target SSID
   if is_profile_active "$SSID"; then
-    echo "Already connected to '$SSID' network as a client."
+    log_message "INFO" "Already connected to '$SSID' network as a client."
   else
     # Attempt to connect to the new Wi-Fi
     if nmcli device wifi connect "$SSID" password "$PASSWORD"; then
-      echo "Successfully connected to '$SSID'."
+      log_message "INFO" "Successfully connected to '$SSID'."
     else
-      echo "Connection to '$SSID' failed. Cleaning up..." >&2
+      log_message "ERROR" "Connection to '$SSID' failed. Cleaning up..."
       # Try to delete the failed connection profile, if it was created
       nmcli con delete "$SSID" &>/dev/null || true
       # Attempt to bring the hotspot back up
@@ -163,30 +176,32 @@ if ! $DISCONNECT; then
 
   # Trigger Update_Content Script if enabled
   if "$UPDATE_CONTENT"; then
-    echo "Updating content..."
+    log_message "INFO" "Running content update script: $UPDATE_CONTENT_SCRIPT_LOCATION"
     # Redirect stdout/stderr to /dev/null to prevent zombie processes.
     nohup "$UPDATE_CONTENT_SCRIPT_LOCATION" -m -u &>/dev/null &
     # If the parent script exits before `nohup`, the child process will still run.
   fi
 
+  log_message "INFO" "Successfully connected to '$SSID'."
+  # Write the status to the status file
   echo "Connected to '$SSID' network as a client." > "$STATUS_FILE_LOCATION"
   exit 0
 
 else
   # Disconnect from current network and activate hotspot
 
-  echo "Attempting to disconnect and activate hotspot profile: '$HOTSPOT_PROFILE'"
+  log_message "INFO" "Attempting to disconnect and activate hotspot profile: '$HOTSPOT_PROFILE'"
 
   if is_profile_active "$HOTSPOT_PROFILE"; then
-    echo "Hotspot profile '$HOTSPOT_PROFILE' is already active."
+    log_message "INFO" "Hotspot profile '$HOTSPOT_PROFILE' is already active."
   else
     # If any Wi-Fi connection is active, try to disconnect from it
     if is_wifi_active; then
       ACTIVE_SSID=$(get_active_wifi_ssid)
       if [[ -n "$ACTIVE_SSID" ]]; then
-        echo "Currently connected to '$ACTIVE_SSID'. Disconnecting..."
+        log_message "INFO" "Currently connected to '$ACTIVE_SSID'. Disconnecting"
         if ! nmcli con delete "$ACTIVE_SSID"; then
-          echo "Warning: Failed to delete connection '$ACTIVE_SSID'. Continuing anyway." >&2
+          log_message "WARNING" "Failed to delete connection '$ACTIVE_SSID'. Continuing anyway."
         fi
       fi
     fi
