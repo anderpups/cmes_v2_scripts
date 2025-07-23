@@ -115,22 +115,23 @@ Run the following commands to configure firewall
 
 1. Create a file `/etc/systemd/system/wifi_reset.service` with the below content
     ```ini
-    [Unit]
-    Description=Reset wifi network
-    Requires=network-online.target
-    After=network-online.target
+   [Unit]
+   Description=Reset wifi network
+   Requires=multi-user.target
+   After=multi-user.target
 
-    [Service]
-    Type=oneshot
-    RemainAfterExit=no
-    ExecStart=/var/www/html/CMES-Pi/wifi_switcher.sh -d
+   [Service]
+   Type=oneshot
+   ExecStartPre=sleep 5
+   ExecStart=/var/www/html/CMES-Pi/wifi_switcher.sh -d
 
-    [Install]
-    WantedBy=multi-user.target
+   [Install]
+   WantedBy=multi-user.target
    ```
 1. Set the permissions and ownership
     ```bash
     sudo chown root:root /etc/systemd/system/wifi_reset.service
     sudo chmod 644 /etc/systemd/system/wifi_reset.service
     ```
+1. Reload the systemd daemon to reread the system files `sudo systemctl daemon-reload`
 1. Enable the service `sudo systemctl enable wifi_reset.service`
