@@ -109,3 +109,28 @@ Run the following commands to configure firewall
     sudo chmod 755 wifi_switcher.sh
     ```
 4. Run the script with required flags. You can run `wifi_switcher.sh -h` for help.
+
+
+## Configure service to reset the wifi on reboot
+
+1. Create a file `/etc/systemd/system/wifi_reset.service` with the below content
+    ```ini
+    [Unit]
+    Description=Reset wifi network
+    Requires=network-online.target
+    After=network-online.target
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=no
+    ExecStart=/var/www/html/CMES-Pi/wifi_switcher.sh -d
+
+    [Install]
+    WantedBy=multi-user.target
+   ```
+1. Set the permissions and ownership
+    ```bash
+    sudo chown root:root /etc/systemd/system/wifi_reset.service
+    sudo chmod 644 /etc/systemd/system/wifi_reset.service
+    ```
+1. Enable the service `sudo systemctl enable wifi_reset.service`

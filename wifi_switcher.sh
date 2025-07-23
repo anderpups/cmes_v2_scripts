@@ -209,6 +209,8 @@ else
     # Bring up the hotspot profile
     if ! nmcli con up "$HOTSPOT_PROFILE"; then
       error_exit "Failed to bring up hotspot profile '$HOTSPOT_PROFILE'."
+    else
+      log_message "INFO" "Hotspot profile '$HOTSPOT_PROFILE' active."
     fi
   fi
 
@@ -217,4 +219,4 @@ else
 fi
 
 # This line should ideally not be reached, but acts as a final safeguard.
-error_exit "An unexpected error occurred. Wifi settings might be inconsistent. Please toggle Wi-Fi to reset." 1
+error_exit "An unexpected error occurred. Wifi settings might be inconsistent. Please run 'wifi_switcher.sh -d' to reset." 1
