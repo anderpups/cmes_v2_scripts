@@ -101,6 +101,11 @@ for path in "${REMOTE_CONTENT_PATHS[@]}"; do
   RSYNC_REMOTE_SOURCES+="${REMOTE_SCP_USER}@${REMOTE_SCP_HOST}:${path} "
 done
 
+# Check if rsync is running
+if pgrep "rsync" >/dev/null; then
+  error_exit "rsync is already running"
+fi
+
 # Get the number of files being synced using --dry-run
 log_message "INFO" "Checking for updates"
 NO_OF_FILES=$(/usr/bin/rsync --dry-run --recursive --delete --update --times --stats -e "ssh -i \"$SSH_PRIVATE_KEY_PATH\"" ${RSYNC_REMOTE_SOURCES} "${LOCAL_CONTENT_PATH}" 2>&1 | grep 'Number of created files' | awk '{print $5}' | sed 's/,//g')

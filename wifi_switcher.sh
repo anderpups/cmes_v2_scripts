@@ -166,10 +166,11 @@ if ! $DISCONNECT; then
     else
       log_message "ERROR" "Connection to '$SSID' failed. Cleaning up..."
       # Try to delete the failed connection profile, if it was created
+      echo "Failed to connect to '$SSID' wi-fi on $(date)." > "$STATUS_FILE_LOCATION"
+      echo "---------------" >> $STATUS_FILE_LOCATION
       nmcli con delete "$SSID" &>/dev/null || true
       # Attempt to bring the hotspot back up
       if nmcli con up "$HOTSPOT_PROFILE"; then
-        echo "Failed to connect to '$SSID' wi-fi." > "$STATUS_FILE_LOCATION"
         echo "CMES wi-fi is active." >> "$STATUS_FILE_LOCATION"
         error_exit "Failed to connect to '$SSID'. Reverted to hotspot."
       else
