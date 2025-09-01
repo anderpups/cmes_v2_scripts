@@ -14,14 +14,18 @@ readonly REMOTE_CONTENT_PATHS=(
 readonly SSH_PRIVATE_KEY_PATH='/home/pi/.ssh/id_rsa'
 
 readonly LOCAL_CONTENT_PATH='/var/www/html/CMES-Pi/assets/Content/'
-readonly LOG_DIR='/var/www/html/CMES-Pi'
-readonly LOG_FILE="${LOG_DIR}/wifi_status.txt"
+readonly LOG_PATH='/var/www/html/CMES-Pi/assets/Log'
 
+readonly STATUS_FILE_LOCATION='/var/www/html/CMES-Pi/wifi_status.txt'
 readonly UPDATE_METADATA_SCRIPT_LOCATION='/var/www/html/CMES-Pi/assets/Cron/GetCSV.sh'
 readonly SENDLOGS_SCRIPT_LOCATION='/var/www/html/CMES-Pi/assets/Cron/SendLogs.sh'
 readonly WIFI_SWITCHER_SCRIPT_LOCATION='/var/www/html/CMES-Pi/wifi_switcher.sh'
 
 # --- Functions ---
+error_exit() {
+  log_message "ERROR" "Error: $1"
+  exit "${2:-1}"
+}
 
 # Function to display help message
 show_help() {
@@ -32,7 +36,7 @@ show_help() {
   echo "Options:"
   echo "  -m    Update metadata (runs GetCSV.sh)"
   echo "  -u    Upload logs (runs SendLogs.sh)"
-  echo "  -s    Switch Wi-Fi back to hotspot mode (runs wifi_switcher.sh -d)"
+  echo "  -s    Switch Wi-Fi back to CMES hotspot mode (runs wifi_switcher.sh -d)"
   echo "  -h    Display this help message"
   echo ""
   echo "Example:"
@@ -43,9 +47,23 @@ show_help() {
 }
 
 # Function to log messages to the status file and stderr
-log_status() {
-  local message="$1"
-  echo "$message" | tee -a "$LOG_FILE" >&2
+log_message() {
+  local level="$1"
+  local message="$2"
+  local timestamp
+  timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  echo "${timestamp} [${level}] ${message}" | tee -a "${LOG_PATH}/UpdateContent-v2_activity.log"
+}
+
+run_rsync() {
+  RSYNC_OUTPUT=$(/usr/bin/rsync --recursive --human-readable --update --delete --times --stats -e "ssh -i \"$SSH_PRIVATE_KEY_PATH\"" ${RSYNC_REMOTE_SOURCES} "${LOCAL_CONTENT_PATH}" 2>&1)
+  echo "Information from Transfer on $(date)" > $STATUS_FILE_LOCATION
+  echo "---------------" >> $STATUS_FILE_LOCATION
+  FILES_DOWNLOADED=$(echo "$RSYNC_OUTPUT" | grep -oP 'Number of created files: \K[0-9]+')
+  FILES_DELETED=$(echo "$RSYNC_OUTPUT" | grep -oP 'Number of deleted files: \K[0-9]+')
+  SIZE_OF_TRANSFER=$(echo "$RSYNC_OUTPUT" | grep -oP 'Total transferred file size: \K.+ ' | xargs)
+  echo "$FILES_DOWNLOADED files downloaded using $SIZE_OF_TRANSFER of data." >> $STATUS_FILE_LOCATION
+  echo "$FILES_DELETED local files deleted" >> $STATUS_FILE_LOCATION
 }
 
 # --- Main Script Logic ---
@@ -63,25 +81,19 @@ while getopts ":mush" opt; do
     s) SWITCH_WIFI=true ;;
     h) show_help ;;
     \?)
-      log_status "Error: Invalid option: -$OPTARG"
-      exit 1
+      error_exit "Invalid option: -${OPTARG}. Use -h for more information."
       ;;
     :)
-      log_status "Error: Option -$OPTARG requires an argument."
-      log_status "Use -h for more information."
+      error_exit "Option -${OPTARG} requires an argument. Use -h for more information."
       exit 1
       ;;
   esac
 done
 shift "$((OPTIND - 1))" # Shift positional parameters to process remaining arguments if any
 
-# Ensure LOG_DIR exists
-mkdir -p "$LOG_DIR" || { log_status "Error: Could not create log directory $LOG_DIR"; exit 1; }
-
 # Clear the log file at the start of execution
-> "$LOG_FILE"
 
-log_status "Starting content synchronization at $(date)"
+log_message "INFO" "Starting content synchronization at $(date)"
 
 # Construct the rsync source paths dynamically from the array
 RSYNC_REMOTE_SOURCES=""
@@ -90,57 +102,53 @@ for path in "${REMOTE_CONTENT_PATHS[@]}"; do
 done
 
 # Get the number of files being synced using --dry-run
-log_status "Checking for changes..."
+log_message "INFO" "Checking for updates"
 NO_OF_FILES=$(/usr/bin/rsync --dry-run --recursive --delete --update --times --stats -e "ssh -i \"$SSH_PRIVATE_KEY_PATH\"" ${RSYNC_REMOTE_SOURCES} "${LOCAL_CONTENT_PATH}" 2>&1 | grep 'Number of created files' | awk '{print $5}' | sed 's/,//g')
-
 if [[ "$NO_OF_FILES" -gt 0 ]]; then
-  log_status "Found $NO_OF_FILES new or updated files to sync."
-  # Perform the actual rsync, logging progress
-  /usr/bin/rsync --recursive --update --delete --times --info=progress -e "ssh -i \"$SSH_PRIVATE_KEY_PATH\"" ${RSYNC_REMOTE_SOURCES} "${LOCAL_CONTENT_PATH}" 2>&1 | \
-  stdbuf --output=0  sed -un "s/^.*xfr#\(.*\),.*/\1\/$NO_OF_FILES/p" | \
-  tee "$LOG_FILE" >&2  
+  log_message "INFO" "Found $NO_OF_FILES new or updated files to sync."
+  # Perform the actual rsync
+  run_rsync
   if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
-    log_status "Error: rsync failed. Check permissions or network connectivity."
-    exit 1
+    error_exit "rsync failed. $(echo "$RSYNC_OUTPUT" | tail -n1)"
   fi
-  log_status "Content synchronization complete."
-elif [[ -z "$NO_OF_FILES" ]]; then # Check if NO_OF_FILES is empty, indicating a dry-run error
-    log_status "Warning: Could not determine number of files to sync. Rsync dry-run might have failed or found no matching files."
-    log_status "Attempting full sync without progress estimation."
-    /usr/bin/rsync --recursive --update --delete --times -e "ssh -i \"$SSH_PRIVATE_KEY_PATH\"" ${RSYNC_REMOTE_SOURCES} "${LOCAL_CONTENT_PATH}" 2>&1 | tee -a "$LOG_FILE" >&2
-    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
-        log_status "Error: rsync failed even without progress estimation. Check permissions or network connectivity."
-        exit 1
-    fi
-    log_status "Content synchronization complete (no file count estimate)."
-else
-  log_status "No new or updated files found. Content is up-to-date."
-fi
+  log_message "INFO" "Content synchronization complete."
 
+elif [[ -z "$NO_OF_FILES" ]]; then # Check if NO_OF_FILES is empty, indicating a dry-run error
+    log_message "WARNING" "Could not determine number of files to sync. Rsync dry-run might have failed or found no matching files."
+    run_rsync
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+        error_exit "rsync failed. $(echo "$RSYNC_OUTPUT" | tail -n1)"
+    fi
+    log_message "WARNING" "Content synchronization complete, although the dry-run failed."
+else
+  log_message "INFO" "No new or updated files found. Content is up-to-date."
+  echo "No updates found. Last check was $(date) " > $STATUS_FILE_LOCATION
+fi
+echo "---------------" >> $STATUS_FILE_LOCATION
 # Update metadata if -m flag is set
 if "$UPDATE_METADATA"; then
-  log_status "Updating metadata..."
+  log_message "INFO" "Updating metadata..."
   if ! "$UPDATE_METADATA_SCRIPT_LOCATION"; then
-    log_status "Error: Metadata update script failed."
+    log_message "ERROR" "Metadata update script failed."
     # Optionally exit here or continue depending on criticality
   fi
 fi
 
 # Upload logs if -u flag is set
 if "$UPLOAD_LOGS"; then
-  log_status "Uploading logs..."
+  log_message "INFO" "Uploading logs"
   if ! "$SENDLOGS_SCRIPT_LOCATION"; then
-    log_status "Error: Log upload script failed."
+    log_message "ERROR" "Log upload script failed."
   fi
 fi
-
 # Set the wifi back to hotspot if -s flag is set
 if "$SWITCH_WIFI"; then
-  log_status "Switching Wi-Fi to hotspot mode..."
+  log_message "INFO" "Switching Wi-Fi to hotspot mode..."
   if ! "$WIFI_SWITCHER_SCRIPT_LOCATION" "-d"; then
-    log_status "Error: Wi-Fi switcher script failed."
+    log_message "ERROR" "Wi-Fi switcher script failed."
   fi
 fi
 
-log_status "All tasks completed."
+log_message "INFO" "All tasks completed."
+
 exit 0
