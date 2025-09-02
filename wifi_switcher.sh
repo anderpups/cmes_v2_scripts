@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script connects to a specified Wi-Fi profile or disconnects to activate a hotspot.
-# v20250722
+# v20250902
 
 # Exit immediately if a command exits with a non-zero status.
 # Treat unset variables as an error when substituting.
