@@ -61,6 +61,8 @@ show_help() {
 
 # Function to log messages
 log_message() {
+  TRUNCATED_LOG=$(tail -n 150 ${LOG_PATH}/wifi_switcher-script_activity.log)
+  echo "$TRUNCATED_LOG" > ${LOG_PATH}/wifi_switcher-script_activity.log
   local level="$1"
   local message="$2"
   local timestamp
@@ -186,8 +188,6 @@ if ! $DISCONNECT; then
     nohup "$UPDATE_CONTENT_SCRIPT_LOCATION" -m -u -s &>/dev/null &
     # If the parent script exits before `nohup`, the child process will still run.
   fi
-
-  log_message "INFO" "Successfully connected to '$SSID'."
   exit 0
 
 else

@@ -48,6 +48,8 @@ show_help() {
 
 # Function to log messages to the status file and stderr
 log_message() {
+  TRUNCATED_LOG=$(tail -n 150 ${LOG_PATH}/UpdateContent-v2_activity.log)
+  echo "$TRUNCATED_LOG" > ${LOG_PATH}/UpdateContent-v2_activity.log
   local level="$1"
   local message="$2"
   local timestamp

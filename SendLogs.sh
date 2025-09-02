@@ -49,6 +49,8 @@ shift $((OPTIND-1))
 
 # Function to log messages
 log_message() {
+  TRUNCATED_LOG=$(tail -n 150 ${LOG_PATH}/SendLogs-script_activity.log)
+  echo "$TRUNCATED_LOG" > ${LOG_PATH}/SendLogs-script_activity.log
   local level="$1"
   local message="$2"
   local timestamp
