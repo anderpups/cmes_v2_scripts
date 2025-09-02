@@ -39,6 +39,8 @@ display_help() {
 
 # Function to log messages
 log_message() {
+  TRUNCATED_LOG=$(tail -n 150 ${LOG_PATH}/GetCSV-script_activity.log)
+  echo "$TRUNCATED_LOG" > ${LOG_PATH}/GetCSV-script_activity.log
   local level="$1"
   local message="$2"
   local timestamp

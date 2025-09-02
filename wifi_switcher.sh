@@ -9,7 +9,7 @@ set -euo pipefail
 
 # --- Configuration ---
 
-# Name of the hotspot connection profile
+# Name of the default hotspot connection profile
 readonly HOTSPOT_PROFILE='cmes-hotspot'
 
 # Location for the Wi-Fi status file
@@ -47,20 +47,22 @@ show_help() {
   echo "  -p 'PASSWORD'"
   echo "     Password for the wireless network."
   echo "  -d"
-  echo "     Disconnects from the current network and activates the hotspot profile."
+  echo "     Disconnects from the current network and activates the default CMES hotspot wi-fi profile."
   echo "  -x"
   echo "     Disables content updates after connecting."
   echo "  -h"
   echo "     Displays this help message."
   echo ""
   echo "Example:"
-  echo "  $(basename "$0") -s 'my-wifi-network' -p 'mysecretpassword'"
+  echo "  $(basename "$0") -s 'my-wi-fi-network' -p 'mysecretpassword'"
   echo "  $(basename "$0") -d"
   exit 0
 }
 
 # Function to log messages
 log_message() {
+  TRUNCATED_LOG=$(tail -n 150 ${LOG_PATH}/wifi_switcher-script_activity.log)
+  echo "$TRUNCATED_LOG" > ${LOG_PATH}/wifi_switcher-script_activity.log
   local level="$1"
   local message="$2"
   local timestamp
@@ -142,13 +144,17 @@ if ! $DISCONNECT; then
 
   log_message "INFO" "Attempting to connect to Wi-Fi network: '$SSID'"
 
-  # If hotspot is active, bring it down first
+  # If CMES wi-fi profile is active, bring it down first
   if is_profile_active "$HOTSPOT_PROFILE"; then
-    log_message "INFO" "Hotspot profile '$HOTSPOT_PROFILE' is active. Bringing it down..."
+    # Attempt to connect to the new Wi-Fi
+    echo  "Attempting to connect to supplied wi-fi network. This will disconnect your current session." > "$STATUS_FILE_LOCATION"
+    echo  "Please wait for the CMES wi-fi to become available and reconnect" >> "$STATUS_FILE_LOCATION"
+    sleep 4
+    log_message "INFO" "wi-fi profile '$HOTSPOT_PROFILE' is active. Bringing it down..."
     # Attempt to bring down the hotspot profile
     # If it fails, log a warning but continue
     if ! nmcli con down "$HOTSPOT_PROFILE"; then
-      log_message "WARNING" "Failed to bring down hotspot profile '$HOTSPOT_PROFILE'. Continuing anyway."
+      log_message "WARNING" "Failed to bring down wi-fi profile '$HOTSPOT_PROFILE'. Continuing anyway."
     fi
     sleep 3 # Give NetworkManager a moment
   fi
@@ -157,16 +163,17 @@ if ! $DISCONNECT; then
   if is_profile_active "$SSID"; then
     log_message "INFO" "Already connected to '$SSID' network as a client."
   else
-    # Attempt to connect to the new Wi-Fi
     if nmcli device wifi connect "$SSID" password "$PASSWORD"; then
       log_message "INFO" "Successfully connected to '$SSID'."
     else
       log_message "ERROR" "Connection to '$SSID' failed. Cleaning up..."
       # Try to delete the failed connection profile, if it was created
+      echo "Failed to connect to '$SSID' wi-fi on $(date)." > "$STATUS_FILE_LOCATION"
+      echo "---------------" >> $STATUS_FILE_LOCATION
       nmcli con delete "$SSID" &>/dev/null || true
       # Attempt to bring the hotspot back up
       if nmcli con up "$HOTSPOT_PROFILE"; then
-        echo "Hotspot is active." > "$STATUS_FILE_LOCATION"
+        echo "CMES wi-fi is active." >> "$STATUS_FILE_LOCATION"
         error_exit "Failed to connect to '$SSID'. Reverted to hotspot."
       else
         error_exit "Failed to connect to '$SSID' and could not restore hotspot."
@@ -178,13 +185,9 @@ if ! $DISCONNECT; then
   if "$UPDATE_CONTENT"; then
     log_message "INFO" "Running content update script: $UPDATE_CONTENT_SCRIPT_LOCATION"
     # Redirect stdout/stderr to /dev/null to prevent zombie processes.
-    nohup "$UPDATE_CONTENT_SCRIPT_LOCATION" -m -u &>/dev/null &
+    nohup "$UPDATE_CONTENT_SCRIPT_LOCATION" -m -u -s &>/dev/null &
     # If the parent script exits before `nohup`, the child process will still run.
   fi
-
-  log_message "INFO" "Successfully connected to '$SSID'."
-  # Write the status to the status file
-  echo "Connected to '$SSID' network as a client." > "$STATUS_FILE_LOCATION"
   exit 0
 
 else
@@ -214,9 +217,12 @@ else
     fi
   fi
 
-  echo "Hotspot is active." > "$STATUS_FILE_LOCATION"
+  # Only add a line if it's not already there.
+  if tail -n 1 "$STATUS_FILE_LOCATION" | grep -qv "CMES wi-fi is active"; then
+    echo "CMES wi-fi is active." >> "$STATUS_FILE_LOCATION"
+  fi
   exit 0
 fi
 
 # This line should ideally not be reached, but acts as a final safeguard.
-error_exit "An unexpected error occurred. Wifi settings might be inconsistent. Please run 'wifi_switcher.sh -d' to reset." 1
+error_exit "An unexpected error occurred. wi-fi settings might be inconsistent. Please run 'wi-fi_switcher.sh -d' to reset." 1
