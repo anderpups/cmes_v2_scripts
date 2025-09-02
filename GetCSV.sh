@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Script to download and import CSV files into sql db
-## v20250721
+## v20250902
 
 # Exit immediately if a command exits with a non-zero status.
 # Treat unset variables as an error when substituting.
