@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Script to export logs from SQL and upload via rsync
-## v20250721
+## v20250902
 
 # Treat unset variables as an error when substituting.
 # Exit if any command in a pipeline fails.
