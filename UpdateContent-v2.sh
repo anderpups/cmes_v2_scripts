@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Script to Update CMES Content via rsync
-# 20250717
+# 20250902
 
 # --- Configuration ---
 
