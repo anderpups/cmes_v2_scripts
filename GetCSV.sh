@@ -177,7 +177,9 @@ getCSV() {
   log_message "INFO" "Attempting to import ${csv_filename}.csv into MySQL."
   if mysqlimport --defaults-extra-file="$MYSQL_DEFAULTS_FILE" \
     -h "$MYSQL_HOST" -P "$MYSQL_PORT" --ignore CMES_mini --verbose \
-    --local --ignore-lines=1 --delete --lines-terminated-by='\n' --fields-terminated-by=',' \
+    --local --ignore-lines=1 --delete \
+    --fields-escaped-by='"' --fields-enclosed-by='"' \
+    --lines-terminated-by='\n' --fields-terminated-by=',' \
     -c "$mysql_columns" "${local_csv_file}" >"$mysql_import_log" 2>&1; then
     log_message "INFO" "Successfully imported ${csv_filename}.csv."
     rm -f "$old_csv_file" # Clean up old file if import was successful
