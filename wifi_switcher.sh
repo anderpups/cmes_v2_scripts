@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script connects to a specified Wi-Fi profile or disconnects to activate a hotspot.
-# v20250902
+# v20251107
 
 # Exit immediately if a command exits with a non-zero status.
 # Treat unset variables as an error when substituting.
@@ -163,10 +163,26 @@ if ! $DISCONNECT; then
   if is_profile_active "$SSID"; then
     log_message "INFO" "Already connected to '$SSID' network as a client."
   else
-    if nmcli device wifi connect "$SSID" password "$PASSWORD"; then
-      log_message "INFO" "Successfully connected to '$SSID'."
-    else
-      log_message "ERROR" "Connection to '$SSID' failed. Cleaning up..."
+    # Try connecting up to 3 times with 3-second sleep between attempts
+    CONNECTION_SUCCESS=false
+    for attempt in 1 2 3; do
+      log_message "INFO" "Connection attempt $attempt to '$SSID'"
+      if nmcli device wifi connect "$SSID" password "$PASSWORD"; then
+        log_message "INFO" "Successfully connected to '$SSID' on attempt $attempt."
+        CONNECTION_SUCCESS=true
+        break
+      else
+        if [[ ! $attempt -eq 1 ]]; then
+          log_message "WARNING" "Connection attempt $attempt to '$SSID' failed. Retrying in 5 seconds..."
+          sleep 5
+        else
+          log_message "ERROR" "Connection attempt $attempt to '$SSID' failed. No more retries."
+        fi
+      fi
+    done
+
+    if [[ "$CONNECTION_SUCCESS" == false ]]; then
+      log_message "ERROR" "All connection attempts to '$SSID' failed. Cleaning up..."
       # Try to delete the failed connection profile, if it was created
       echo "Failed to connect to '$SSID' wi-fi on $(date)." > "$STATUS_FILE_LOCATION"
       echo "---------------" >> $STATUS_FILE_LOCATION

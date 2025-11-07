@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Script to Update CMES Content via rsync
-# 20250902
+# 20251107
 
 # --- Configuration ---
 
@@ -58,7 +58,7 @@ log_message() {
 }
 
 run_rsync() {
-  RSYNC_OUTPUT=$(/usr/bin/rsync --recursive --human-readable --update --delete --times --stats -e "ssh -i \"$SSH_PRIVATE_KEY_PATH\"" ${RSYNC_REMOTE_SOURCES} "${LOCAL_CONTENT_PATH}" 2>&1)
+  RSYNC_OUTPUT=$(/usr/bin/rsync --recursive --compress --human-readable --update --delete --times --stats -e "ssh -i \"$SSH_PRIVATE_KEY_PATH\"" ${RSYNC_REMOTE_SOURCES} "${LOCAL_CONTENT_PATH}" 2>&1)
   echo "Information from Transfer on $(date)" > $STATUS_FILE_LOCATION
   echo "---------------" >> $STATUS_FILE_LOCATION
   FILES_DOWNLOADED=$(echo "$RSYNC_OUTPUT" | grep -oP 'Number of created files: \K[0-9]+')
