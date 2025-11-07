@@ -163,9 +163,9 @@ if ! $DISCONNECT; then
   if is_profile_active "$SSID"; then
     log_message "INFO" "Already connected to '$SSID' network as a client."
   else
-    # Try connecting up to 3 times with 3-second sleep between attempts
+    # Try connecting up to 5 times with 5-second sleep between attempts
     CONNECTION_SUCCESS=false
-    for attempt in 1 2 3; do
+    for attempt in 1 2 3 4 5; do
       log_message "INFO" "Connection attempt $attempt to '$SSID'"
       if nmcli device wifi connect "$SSID" password "$PASSWORD"; then
         log_message "INFO" "Successfully connected to '$SSID' on attempt $attempt."
